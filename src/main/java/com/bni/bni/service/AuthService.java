@@ -1,49 +1,77 @@
 package com.bni.bni.service;
 
-import java.time.OffsetDateTime;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
 import com.bni.bni.entity.User;
 import com.bni.bni.repository.UserRepository;
 import com.bni.bni.util.JwtUtil;
+import jakarta.transaction.Transactional;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
+/**
+ * AuthService that aligns with the updated "users" table (email_address, is_active, timestamps).
+ * <p>
+ * Rules:
+ *  • Username and e‑mail must be unique.
+ *  • Account is enabled only when <code>is_active = TRUE</code>.
+ *  • Password is stored ONLY as BCrypt hash (passwordHash).
+ *  • created_at / updated_at are handled automatically by Hibernate annotations in {@link User}.
+ */
 @Service
 public class AuthService {
 
-    @Autowired
-    private UserRepository repo;
+    private final UserRepository repo;
+    private final PasswordEncoder encoder;
+    private final JwtUtil jwtUtil;
 
-    @Autowired
-    private PasswordEncoder encoder;
+    public AuthService(UserRepository repo,
+                       PasswordEncoder encoder,
+                       JwtUtil jwtUtil) {
+        this.repo = repo;
+        this.encoder = encoder;
+        this.jwtUtil = jwtUtil;
+    }
 
-    @Autowired
-    private JwtUtil jwtUtil;
-
-    public String register(String username, String password) {
-        if (repo.existsByUsername(username)) {
+    /**
+     * Register a new user. Returns a status string for brevity.
+     * Ideally you would return a DTO or AuthResponse.
+     */
+    @Transactional
+    public String register(String username, String emailAddress, String rawPassword) {
+        if (repo.existsByUsername(username) || repo.existsByEmail(emailAddress)) {
             return "User already exists";
         }
 
         User user = new User();
         user.setUsername(username);
-        user.setPasswordHash(encoder.encode(password));
+        user.setEmailAddress(emailAddress);
+        user.setPasswordHash(encoder.encode(rawPassword));
         user.setRole("USER");
-        user.setCreatedAt(OffsetDateTime.now());
-        repo.save(user);
+        // isActive default = true (see User entity)
 
+        repo.save(user);
         return "Registered successfully";
     }
 
-    public String login(String username, String password) {
-        Optional<User> user = repo.findByUsername(username);
-        if (user.isPresent() && encoder.matches(password, user.get().getPasswordHash())) {
-            return jwtUtil.generateToken(username, user.get().getRole());
+    /**
+     * Login with either username or email; returns JWT token if success, otherwise <code>null</code>.
+     */
+    public String login(String identifier, String rawPassword) {
+        Optional<User> userOpt = repo.findByUsername(identifier);
+        if (userOpt.isEmpty()) {
+            userOpt = repo.findByEmailAddress(identifier);
         }
 
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            if (!user.getIsActive()) {
+                return null; // account disabled
+            }
+            if (encoder.matches(rawPassword, user.getPasswordHash())) {
+                return jwtUtil.generateToken(user.getUsername(), user.getRole());
+            }
+        }
         return null;
     }
 }
