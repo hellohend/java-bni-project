@@ -3,7 +3,7 @@ pipeline{
 
     environment {
        PROJECT_NAME = "bariq123456-dev"
-       BUILD_NAME = "bni-java-project-git"
+       BUILD_NAME = "java-bni-project-git"
     }
 
     stages {
