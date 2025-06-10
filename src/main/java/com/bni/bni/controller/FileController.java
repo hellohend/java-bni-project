@@ -59,7 +59,7 @@ public class FileController {
             Path filePath = Paths.get(uploadDir).resolve(filename).normalize();
             Resource resource = new UrlResource(filePath.toUri());
 
-            if (resource.exists()) {
+            if (!resource.exists()) {
                 return ResponseEntity.notFound().build();
             }
             String contentType = Files.probeContentType(filePath);
