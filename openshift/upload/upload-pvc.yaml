@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tahutek        # nama PVC
+spec:
+  accessModes:
+    - ReadWriteOnce       # ganti RWX jika butuh multi-pod access
+  resources:
+    requests:
+      storage: 1Gi       # kapasitas penyimpanan
+  storageClassName: gp3   # kosongkan jika mau pakai StorageClass default

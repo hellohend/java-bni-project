@@ -39,7 +39,7 @@ public class AuthService {
      */
     @Transactional
     public String register(String username, String emailAddress, String rawPassword) {
-        if (repo.existsByUsername(username) || repo.existsByEmail(emailAddress)) {
+        if (repo.existsByUsername(username) || repo.existsByEmailAddress(emailAddress)) {
             return "User already exists";
         }
 

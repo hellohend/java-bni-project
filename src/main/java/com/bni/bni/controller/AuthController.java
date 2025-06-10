@@ -1,21 +1,14 @@
 package com.bni.bni.controller;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.bni.bni.service.AuthService;
 import com.bni.bni.util.JwtUtil;
-
 import io.jsonwebtoken.Claims;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -31,11 +24,23 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> register(@RequestBody Map<String, String> body) {
         String username = body.get("username");
         String password = body.get("password");
-        String message = authService.register(username, password, "USER");
+        
+        // Tambahkan emailAddress di sini
+        String emailAddress = body.get("emailAddress");
+        String message = authService.register(username, password, emailAddress);
+        // sampai sini
 
         Map<String, Object> response = new HashMap<>();
         response.put("status", 200);
         response.put("message", message);
+
+        // Ini di tamabhin
+        if (message.equals("User registered successfully")) {
+            response.put("username", username);
+        } else {
+            response.put("error", "Registration failed");
+        }
+        // sampe ke sini 
 
         return ResponseEntity.ok(response);
     }
@@ -50,7 +55,7 @@ public class AuthController {
         if (token != null) {
             response.put("status", 200);
             response.put("token", token);
-            response.put("message", "Login Berhasil");
+            response.put("masage", "Login Berhasil");
             return ResponseEntity.ok(response);
         } else {
             response.put("status", 401);
