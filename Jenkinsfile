@@ -2,30 +2,30 @@ pipeline{
     agent any
 
     environment {
-        PROJECT_NAME = "bariq123456-dev"
-        BUILD_NAME = "java-bni-project-git"
+       PROJECT_NAME = "bariq123456-dev"
+       BUILD_NAME = "bni-java-project-git"
     }
 
     stages {
-        stage('Trigger Build in OpenShift'){
+        stage('Triggers Build in Openshift') {
             steps {
                 sh "oc start-build ${BUILD_NAME} --from-dir=. --follow -n ${PROJECT_NAME}"
             }
         }
 
-        stage ('Deploy to OpenShift') {
+        stage("Deploy to Openshift") {
             steps {
                 sh "oc rollout restart deployment/${BUILD_NAME} -n ${PROJECT_NAME}"
             }
         }
     }
 
-    post (
+    post {
         success {
-            echo 'Build & Deployment Successfull via OpenShift BuildConfig!'
+            echo "Build Succeeded!"
         }
         failure {
-            echo 'Gagal menjalankan pipeline'
+            echo "Build Failed!"
         }
-    )
+    }
 }
