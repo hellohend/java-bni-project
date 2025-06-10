@@ -24,4 +24,4 @@ jobs:
 
     - name: Start OpenShift Build
       run: |
-        oc start-build "${{secrets.OC_BUILD_NAME}}" -n "${{secrets.OC_NAMESPACE}}" --wait --followmm
+        oc start-build "${{secrets.OC_BUILD_NAME}}" -n "${{secrets.OC_NAMESPACE}}" --wait --follow
